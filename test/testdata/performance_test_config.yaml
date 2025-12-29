@@ -1,0 +1,118 @@
+# HTTPDNS Go SDK 性能测试配置
+
+# 基准测试配置
+benchmark:
+  # 测试持续时间
+  duration: "30s"
+  # 并发数
+  concurrency: [1, 10, 50, 100, 200]
+  # 测试域名
+  domains:
+    - "www.aliyun.com"
+    - "www.taobao.com"
+    - "www.tmall.com"
+    - "ecs.aliyuncs.com"
+    - "rds.aliyuncs.com"
+  # 客户端IP
+  client_ip: "1.2.3.4"
+
+# 压力测试配置
+stress:
+  # 测试场景
+  scenarios:
+    - name: "light_load"
+      duration: "5m"
+      qps: 10
+      concurrency: 5
+    - name: "medium_load"
+      duration: "10m"
+      qps: 50
+      concurrency: 20
+    - name: "heavy_load"
+      duration: "15m"
+      qps: 100
+      concurrency: 50
+    - name: "extreme_load"
+      duration: "5m"
+      qps: 500
+      concurrency: 100
+
+# 内存测试配置
+memory:
+  # 内存泄漏检测
+  leak_detection:
+    enabled: true
+    duration: "10m"
+    sample_interval: "10s"
+  # 内存使用监控
+  usage_monitoring:
+    enabled: true
+    max_memory_mb: 100
+    gc_frequency: "30s"
+
+# 网络条件模拟
+network:
+  conditions:
+    - name: "fast_network"
+      latency: "10ms"
+      bandwidth: "100Mbps"
+      packet_loss: "0%"
+    - name: "slow_network"
+      latency: "200ms"
+      bandwidth: "1Mbps"
+      packet_loss: "1%"
+    - name: "unstable_network"
+      latency: "50ms"
+      bandwidth: "10Mbps"
+      packet_loss: "5%"
+
+# 故障注入配置
+fault_injection:
+  scenarios:
+    - name: "service_unavailable"
+      type: "http_error"
+      error_code: 503
+      probability: 0.1
+    - name: "network_timeout"
+      type: "timeout"
+      timeout: "1s"
+      probability: 0.05
+    - name: "dns_failure"
+      type: "dns_error"
+      probability: 0.02
+
+# 性能指标阈值
+thresholds:
+  # 延迟阈值
+  latency:
+    p50: "100ms"
+    p95: "500ms"
+    p99: "1s"
+  # 成功率阈值
+  success_rate: 0.95
+  # QPS阈值
+  min_qps: 10
+  max_qps: 1000
+  # 内存使用阈值
+  max_memory_mb: 50
+  # 错误率阈值
+  max_error_rate: 0.05
+
+# 报告配置
+reporting:
+  # 输出格式
+  formats: ["json", "html", "csv"]
+  # 报告目录
+  output_dir: "./test_reports"
+  # 包含的指标
+  metrics:
+    - "latency"
+    - "throughput"
+    - "error_rate"
+    - "memory_usage"
+    - "cpu_usage"
+    - "network_io"
+  # 图表配置
+  charts:
+    enabled: true
+    types: ["line", "histogram", "heatmap"]
