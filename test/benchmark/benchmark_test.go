@@ -25,7 +25,7 @@ func BenchmarkResolve(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := client.Resolve(ctx, "example.com", "1.2.3.4")
+			_, err := client.Resolve(ctx, "example.com", httpdns.WithClientIP("1.2.3.4"))
 			if err != nil {
 				b.Logf("Resolve error: %v", err)
 			}
@@ -50,7 +50,7 @@ func BenchmarkResolveBatch(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := client.ResolveBatch(ctx, domains, "1.2.3.4")
+			_, err := client.ResolveBatch(ctx, domains, httpdns.WithClientIP("1.2.3.4"))
 			if err != nil {
 				b.Logf("ResolveBatch error: %v", err)
 			}
@@ -75,12 +75,12 @@ func BenchmarkResolveAsync(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			done := make(chan bool, 1)
-			client.ResolveAsync(ctx, "example.com", "1.2.3.4", func(result *httpdns.ResolveResult, err error) {
+			client.ResolveAsync(ctx, "example.com", func(result *httpdns.ResolveResult, err error) {
 				if err != nil {
 					b.Logf("Async resolve error: %v", err)
 				}
 				done <- true
-			})
+			}, httpdns.WithClientIP("1.2.3.4"))
 			<-done
 		}
 	})
@@ -110,7 +110,7 @@ func BenchmarkConcurrentResolve(b *testing.B) {
 		for j := 0; j < concurrency; j++ {
 			go func() {
 				defer wg.Done()
-				_, err := client.Resolve(ctx, "example.com", "1.2.3.4")
+				_, err := client.Resolve(ctx, "example.com", httpdns.WithClientIP("1.2.3.4"))
 				if err != nil {
 					b.Logf("Concurrent resolve error: %v", err)
 				}
@@ -137,7 +137,7 @@ func BenchmarkMetricsCollection(b *testing.B) {
 
 	// 预热，生成一些指标数据
 	for i := 0; i < 100; i++ {
-		client.Resolve(ctx, "example.com", "1.2.3.4")
+		client.Resolve(ctx, "example.com", httpdns.WithClientIP("1.2.3.4"))
 	}
 
 	b.ResetTimer()
@@ -200,7 +200,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		}
 
 		for _, domain := range domains {
-			_, err := client.Resolve(ctx, domain, "1.2.3.4")
+			_, err := client.Resolve(ctx, domain, httpdns.WithClientIP("1.2.3.4"))
 			if err != nil {
 				b.Logf("Memory test resolve error: %v", err)
 			}
@@ -224,7 +224,7 @@ func BenchmarkErrorHandling(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		// 尝试解析一个不存在的域名来触发错误处理
-		_, err := client.Resolve(ctx, "this-domain-does-not-exist-for-sure.invalid", "1.2.3.4")
+		_, err := client.Resolve(ctx, "this-domain-does-not-exist-for-sure.invalid", httpdns.WithClientIP("1.2.3.4"))
 		if err == nil {
 			b.Log("Expected error but got none")
 		}
@@ -254,7 +254,7 @@ func TestPerformanceReport(t *testing.T) {
 
 	// 单次解析延迟测试
 	start := time.Now()
-	_, err = client.Resolve(ctx, "example.com", "1.2.3.4")
+	_, err = client.Resolve(ctx, "example.com", httpdns.WithClientIP("1.2.3.4"))
 	singleLatency := time.Since(start)
 	if err != nil {
 		t.Logf("Single resolve error: %v", err)
@@ -265,7 +265,7 @@ func TestPerformanceReport(t *testing.T) {
 	// 批量解析延迟测试
 	domains := []string{"google.com", "github.com", "stackoverflow.com", "reddit.com", "amazon.com"}
 	start = time.Now()
-	results, err := client.ResolveBatch(ctx, domains, "1.2.3.4")
+	results, err := client.ResolveBatch(ctx, domains, httpdns.WithClientIP("1.2.3.4"))
 	batchLatency := time.Since(start)
 	if err != nil {
 		t.Logf("Batch resolve error: %v", err)
@@ -292,7 +292,7 @@ func TestPerformanceReport(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < iterations; j++ {
-				client.Resolve(ctx, "example.com", "1.2.3.4")
+				client.Resolve(ctx, "example.com", httpdns.WithClientIP("1.2.3.4"))
 			}
 		}()
 	}

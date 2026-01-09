@@ -34,7 +34,7 @@ func main() {
 	domain := "www.aliyun.com"
 	fmt.Printf("\n正在使用HTTPS解析域名: %s\n", domain)
 
-	result, err := client.Resolve(ctx, domain, "")
+	result, err := client.Resolve(ctx, domain)
 	if err != nil {
 		log.Printf("解析失败: %v", err)
 		return

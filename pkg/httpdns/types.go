@@ -8,14 +8,14 @@ import (
 
 // Client 是HTTPDNS客户端的主接口
 type Client interface {
-	// Resolve 解析单个域名，clientIP为客户端IP地址
-	Resolve(ctx context.Context, domain string, clientIP string, opts ...ResolveOption) (*ResolveResult, error)
+	// Resolve 解析单个域名
+	Resolve(ctx context.Context, domain string, opts ...ResolveOption) (*ResolveResult, error)
 
-	// ResolveBatch 批量解析域名，clientIP为客户端IP地址
-	ResolveBatch(ctx context.Context, domains []string, clientIP string, opts ...ResolveOption) ([]*ResolveResult, error)
+	// ResolveBatch 批量解析域名
+	ResolveBatch(ctx context.Context, domains []string, opts ...ResolveOption) ([]*ResolveResult, error)
 
-	// ResolveAsync 异步解析域名，clientIP为客户端IP地址
-	ResolveAsync(ctx context.Context, domain string, clientIP string, callback func(*ResolveResult, error), opts ...ResolveOption)
+	// ResolveAsync 异步解析域名
+	ResolveAsync(ctx context.Context, domain string, callback func(*ResolveResult, error), opts ...ResolveOption)
 
 	// Close 关闭客户端
 	Close() error
@@ -72,6 +72,7 @@ type ResolveOption func(*ResolveOptions)
 type ResolveOptions struct {
 	QueryType QueryType     // 查询类型
 	Timeout   time.Duration // 超时时间
+	ClientIP  string        // 客户端IP
 }
 
 // QueryType 查询类型，对应API中的query参数
@@ -108,6 +109,13 @@ func WithBothIP() ResolveOption {
 func WithTimeout(timeout time.Duration) ResolveOption {
 	return func(opts *ResolveOptions) {
 		opts.Timeout = timeout
+	}
+}
+
+// WithClientIP 设置客户端IP
+func WithClientIP(ip string) ResolveOption {
+	return func(opts *ResolveOptions) {
+		opts.ClientIP = ip
 	}
 }
 

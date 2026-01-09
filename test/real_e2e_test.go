@@ -35,7 +35,6 @@ func TestRealEndToEndBatchResolve(t *testing.T) {
 
 	// 测试域名（根据规则文档，这些域名可以成功解析）
 	domains := []string{"www.aliyun.com", "www.alibaba.com"}
-	clientIP := "192.168.1.1"
 
 	t.Logf("开始真实环境批量解析测试，域名: %v", domains)
 
@@ -43,7 +42,7 @@ func TestRealEndToEndBatchResolve(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	results, err := client.ResolveBatch(ctx, domains, clientIP)
+	results, err := client.ResolveBatch(ctx, domains, httpdns.WithClientIP("192.168.1.1"))
 	if err != nil {
 		t.Fatalf("批量解析失败: %v", err)
 	}
@@ -137,7 +136,6 @@ func TestRealEndToEndSingleResolve(t *testing.T) {
 
 	// 测试域名
 	domain := "www.aliyun.com"
-	clientIP := "192.168.1.1"
 
 	t.Logf("开始真实环境单个解析测试，域名: %s", domain)
 
@@ -145,7 +143,7 @@ func TestRealEndToEndSingleResolve(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	result, err := client.Resolve(ctx, domain, clientIP)
+	result, err := client.Resolve(ctx, domain, httpdns.WithClientIP("192.168.1.1"))
 	if err != nil {
 		t.Fatalf("单个解析失败: %v", err)
 	}
@@ -235,8 +233,6 @@ func TestRealEndToEndBehaviorValidation(t *testing.T) {
 		},
 	}
 
-	clientIP := "192.168.1.1"
-
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Logf("测试 %s: %v", tc.desc, tc.domains)
@@ -245,7 +241,7 @@ func TestRealEndToEndBehaviorValidation(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 
-			results, err := client.ResolveBatch(ctx, tc.domains, clientIP)
+			results, err := client.ResolveBatch(ctx, tc.domains, httpdns.WithClientIP("192.168.1.1"))
 			
 			if err != nil {
 				t.Logf("解析出错: %v", err)
@@ -306,7 +302,6 @@ func TestRealEndToEndIPv6Support(t *testing.T) {
 	defer client.Close()
 
 	domain := "www.aliyun.com"
-	clientIP := "192.168.1.1"
 
 	t.Logf("测试IPv6支持，域名: %s", domain)
 
@@ -318,22 +313,22 @@ func TestRealEndToEndIPv6Support(t *testing.T) {
 	}{
 		{
 			name: "默认查询",
-			opts: nil,
+			opts: []httpdns.ResolveOption{httpdns.WithClientIP("192.168.1.1")},
 			desc: "默认查询（IPv4和IPv6）",
 		},
 		{
 			name: "仅IPv4",
-			opts: []httpdns.ResolveOption{httpdns.WithIPv4Only()},
+			opts: []httpdns.ResolveOption{httpdns.WithClientIP("192.168.1.1"), httpdns.WithIPv4Only()},
 			desc: "仅查询IPv4地址",
 		},
 		{
 			name: "仅IPv6",
-			opts: []httpdns.ResolveOption{httpdns.WithIPv6Only()},
+			opts: []httpdns.ResolveOption{httpdns.WithClientIP("192.168.1.1"), httpdns.WithIPv6Only()},
 			desc: "仅查询IPv6地址",
 		},
 		{
 			name: "IPv4和IPv6",
-			opts: []httpdns.ResolveOption{httpdns.WithBothIP()},
+			opts: []httpdns.ResolveOption{httpdns.WithClientIP("192.168.1.1"), httpdns.WithBothIP()},
 			desc: "明确查询IPv4和IPv6",
 		},
 	}
@@ -345,7 +340,7 @@ func TestRealEndToEndIPv6Support(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 
-			result, err := client.Resolve(ctx, domain, clientIP, tc.opts...)
+			result, err := client.Resolve(ctx, domain, tc.opts...)
 			if err != nil {
 				t.Fatalf("解析失败: %v", err)
 			}

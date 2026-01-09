@@ -69,7 +69,7 @@ func TestBatchResolveIPv6EndToEnd(t *testing.T) {
 	domains := []string{"www.aliyun.com", "www.alibaba.com"}
 
 	t.Logf("开始批量解析域名: %v", domains)
-	results, err := client.ResolveBatch(ctx, domains, "192.168.1.1")
+	results, err := client.ResolveBatch(ctx, domains, httpdns.WithClientIP("192.168.1.1"))
 	if err != nil {
 		t.Fatalf("批量解析失败: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestBatchResolveLegacyFormatIPv6(t *testing.T) {
 	defer client.Close()
 
 	ctx := context.Background()
-	results, err := client.ResolveBatch(ctx, []string{"legacy.example.com"}, "192.168.1.1")
+	results, err := client.ResolveBatch(ctx, []string{"legacy.example.com"}, httpdns.WithClientIP("192.168.1.1"))
 	if err != nil {
 		t.Fatalf("批量解析失败: %v", err)
 	}

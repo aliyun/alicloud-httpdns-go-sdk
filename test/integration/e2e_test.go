@@ -45,7 +45,7 @@ func TestE2E_RealService(t *testing.T) {
 
 		for _, domain := range testDomains {
 			t.Run(domain, func(t *testing.T) {
-				result, err := client.Resolve(ctx, domain, "")
+				result, err := client.Resolve(ctx, domain)
 				if err != nil {
 					t.Errorf("Failed to resolve %s: %v", domain, err)
 					return
@@ -80,7 +80,7 @@ func TestE2E_RealService(t *testing.T) {
 			"ecs.aliyuncs.com",
 		}
 
-		results, err := client.ResolveBatch(ctx, domains, "")
+		results, err := client.ResolveBatch(ctx, domains)
 		if err != nil {
 			t.Fatalf("Failed to resolve batch: %v", err)
 		}
@@ -114,7 +114,7 @@ func TestE2E_RealService(t *testing.T) {
 		var result *httpdns.ResolveResult
 		var asyncErr error
 
-		client.ResolveAsync(ctx, domain, "", func(r *httpdns.ResolveResult, err error) {
+		client.ResolveAsync(ctx, domain, func(r *httpdns.ResolveResult, err error) {
 			result = r
 			asyncErr = err
 			done <- true
@@ -142,7 +142,7 @@ func TestE2E_RealService(t *testing.T) {
 		// 执行一些解析操作
 		testDomains := []string{"www.aliyun.com", "www.taobao.com"}
 		for _, domain := range testDomains {
-			client.Resolve(ctx, domain, "")
+			client.Resolve(ctx, domain)
 		}
 
 		// 检查指标
@@ -194,7 +194,7 @@ func TestE2E_PerformanceStress(t *testing.T) {
 			go func(workerID int) {
 				defer wg.Done()
 				for j := 0; j < requestsPerWorker; j++ {
-					_, err := client.Resolve(ctx, domain, "")
+					_, err := client.Resolve(ctx, domain)
 					if err != nil {
 						errors <- fmt.Errorf("worker %d request %d: %v", workerID, j, err)
 					}
@@ -246,7 +246,7 @@ func TestE2E_PerformanceStress(t *testing.T) {
 		for {
 			select {
 			case <-ticker.C:
-				_, err := client.Resolve(ctx, domain, "")
+				_, err := client.Resolve(ctx, domain)
 				requestCount++
 				if err != nil {
 					errorCount++
@@ -298,7 +298,7 @@ func TestE2E_ErrorHandling(t *testing.T) {
 		defer client.Close()
 
 		ctx := context.Background()
-		_, err = client.Resolve(ctx, "www.aliyun.com", "")
+		_, err = client.Resolve(ctx, "www.aliyun.com")
 
 		// 应该返回错误，因为无法连接到服务
 		if err == nil {
@@ -326,7 +326,7 @@ func TestE2E_ErrorHandling(t *testing.T) {
 
 		ctx := context.Background()
 		start := time.Now()
-		result, err := client.Resolve(ctx, "www.aliyun.com", "")
+		result, err := client.Resolve(ctx, "www.aliyun.com")
 		duration := time.Since(start)
 
 		t.Logf("Timeout test completed in %v", duration)
@@ -370,7 +370,7 @@ func TestE2E_ErrorCases(t *testing.T) {
 
 		for _, domain := range unconfiguredDomains {
 			t.Run(domain, func(t *testing.T) {
-				result, err := client.Resolve(ctx, domain, "")
+				result, err := client.Resolve(ctx, domain)
 
 				if err != nil {
 					t.Logf("Domain %s failed to resolve: %v", domain, err)
@@ -406,7 +406,7 @@ func TestE2E_ErrorCases(t *testing.T) {
 			"www.google.com", // 额外的未配置域名
 		}
 
-		results, err := client.ResolveBatch(ctx, unconfiguredDomains, "")
+		results, err := client.ResolveBatch(ctx, unconfiguredDomains)
 		if err != nil {
 			t.Logf("Batch resolve of unconfigured domains failed: %v", err)
 		} else {
@@ -436,7 +436,7 @@ func TestE2E_ErrorCases(t *testing.T) {
 			"www.qq.com",     // 无法解析
 		}
 
-		results, err := client.ResolveBatch(ctx, mixedDomains, "")
+		results, err := client.ResolveBatch(ctx, mixedDomains)
 		if err != nil {
 			t.Logf("Mixed batch resolve failed: %v", err)
 		} else {
@@ -503,7 +503,7 @@ func TestE2E_EdgeCases(t *testing.T) {
 				continue // 空域名会在客户端验证阶段被拒绝
 			}
 
-			result, err := client.Resolve(ctx, domain, "")
+			result, err := client.Resolve(ctx, domain)
 			if err != nil {
 				t.Logf("Invalid domain %s failed as expected: %v", domain, err)
 			} else {
@@ -520,7 +520,7 @@ func TestE2E_EdgeCases(t *testing.T) {
 		}
 
 		for _, domain := range specialDomains {
-			result, err := client.Resolve(ctx, domain, "")
+			result, err := client.Resolve(ctx, domain)
 			if err != nil {
 				t.Logf("Special domain %s failed: %v", domain, err)
 			} else {
@@ -537,7 +537,7 @@ func TestE2E_EdgeCases(t *testing.T) {
 		}
 
 		start := time.Now()
-		results, err := client.ResolveBatch(ctx, domains, "")
+		results, err := client.ResolveBatch(ctx, domains)
 		duration := time.Since(start)
 
 		if err != nil {

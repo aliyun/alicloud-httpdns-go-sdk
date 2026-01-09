@@ -71,7 +71,7 @@ func testNewTypeFieldFormat() {
 	defer client.Close()
 
 	ctx := context.Background()
-	results, err := client.ResolveBatch(ctx, []string{"ipv4.example.com", "ipv6.example.com"}, "")
+	results, err := client.ResolveBatch(ctx, []string{"ipv4.example.com", "ipv6.example.com"})
 	if err != nil {
 		fmt.Printf("❌ 批量解析失败: %v\n", err)
 		return
@@ -128,7 +128,7 @@ func testLegacyFormatCompatibility() {
 	defer client.Close()
 
 	ctx := context.Background()
-	results, err := client.ResolveBatch(ctx, []string{"legacy.example.com"}, "")
+	results, err := client.ResolveBatch(ctx, []string{"legacy.example.com"})
 	if err != nil {
 		fmt.Printf("❌ 批量解析失败: %v\n", err)
 		return
@@ -190,7 +190,7 @@ func testMixedFormat() {
 	defer client.Close()
 
 	ctx := context.Background()
-	results, err := client.ResolveBatch(ctx, []string{"new.example.com", "old.example.com"}, "")
+	results, err := client.ResolveBatch(ctx, []string{"new.example.com", "old.example.com"})
 	if err != nil {
 		fmt.Printf("❌ 批量解析失败: %v\n", err)
 		return

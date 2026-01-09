@@ -121,7 +121,7 @@ func TestResolver_ResolveBatch_TypeField(t *testing.T) {
 
 			ctx := context.Background()
 			domains := []string{"example.com"}
-			results, err := resolver.ResolveBatch(ctx, domains, "1.2.3.4")
+			results, err := resolver.ResolveBatch(ctx, domains, WithClientIP("1.2.3.4"))
 
 			if err != nil {
 				t.Fatalf("ResolveBatch() error = %v", err)
@@ -205,7 +205,7 @@ func TestResolver_ResolveBatch_TypeFieldIntegration(t *testing.T) {
 
 	ctx := context.Background()
 	domains := []string{"www.aliyun.com", "www.taobao.com"}
-	results, err := resolver.ResolveBatch(ctx, domains, "192.168.1.1")
+	results, err := resolver.ResolveBatch(ctx, domains, WithClientIP("192.168.1.1"))
 
 	if err != nil {
 		t.Fatalf("ResolveBatch() error = %v", err)
@@ -359,7 +359,7 @@ func TestResolver_ResolveBatch_RealWorldScenarios(t *testing.T) {
 				domains = append(domains, domain)
 			}
 
-			results, err := resolver.ResolveBatch(ctx, domains, "192.168.1.1")
+			results, err := resolver.ResolveBatch(ctx, domains, WithClientIP("192.168.1.1"))
 
 			if err != nil {
 				t.Fatalf("ResolveBatch() error = %v", err)

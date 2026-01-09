@@ -16,7 +16,7 @@ var DefaultBootstrapIPs = []string{
 var DefaultBootstrapDomain = "resolvers-cn.httpdns.aliyuncs.com"
 
 // 默认HTTPS SNI域名
-var DefaultHTTPSSNI = "resolver-cns.aliyuncs.com"
+var DefaultHTTPSSNI = "203.107.1.1"
 
 // Config 客户端配置
 type Config struct {
@@ -39,6 +39,12 @@ type Config struct {
 	// 签名配置
 	SignatureExpireTime time.Duration // 签名过期时间，默认30秒
 
+	// 缓存配置
+	EnableMemoryCache     bool          // 是否启用内存缓存，默认true
+	AllowExpiredCache     bool          // 是否允许使用过期缓存，默认false
+	EnablePersistentCache bool          // 是否启用持久化缓存，默认false
+	CacheExpireThreshold  time.Duration // 持久化缓存过期阈值，默认0
+
 	// 日志配置
 	Logger Logger
 }
@@ -46,13 +52,17 @@ type Config struct {
 // DefaultConfig 返回默认配置
 func DefaultConfig() *Config {
 	return &Config{
-		BootstrapIPs:        DefaultBootstrapIPs,
-		Timeout:             5 * time.Second,
-		MaxRetries:          0,     // 默认不重试，避免频率限制问题
-		EnableHTTPS:         false, // 默认使用HTTP
-		EnableMetrics:       false,
-		HTTPSSNIHost:        DefaultHTTPSSNI,  // 默认HTTPS SNI主机名
-		SignatureExpireTime: 30 * time.Second, // 默认30秒签名过期时间
+		BootstrapIPs:          DefaultBootstrapIPs,
+		Timeout:               5 * time.Second,
+		MaxRetries:            0,     // 默认不重试，避免频率限制问题
+		EnableHTTPS:           false, // 默认使用HTTP
+		EnableMetrics:         false,
+		HTTPSSNIHost:          DefaultHTTPSSNI,  // 默认HTTPS SNI主机名
+		SignatureExpireTime:   30 * time.Second, // 默认30秒签名过期时间
+		EnableMemoryCache:     true,             // 默认启用内存缓存
+		AllowExpiredCache:     false,            // 默认不允许使用过期缓存
+		EnablePersistentCache: false,            // 默认不启用持久化缓存
+		CacheExpireThreshold:  0,                // 默认持久化缓存严格按TTL过期
 	}
 }
 
@@ -75,6 +85,13 @@ func (c *Config) Validate() error {
 	}
 	if c.HTTPSSNIHost == "" {
 		c.HTTPSSNIHost = DefaultHTTPSSNI
+	}
+	// 持久化缓存依赖内存缓存，如果未启用内存缓存则自动禁用持久化缓存
+	if c.EnablePersistentCache && !c.EnableMemoryCache {
+		c.EnablePersistentCache = false
+	}
+	if c.CacheExpireThreshold < 0 {
+		c.CacheExpireThreshold = 0
 	}
 	return nil
 }

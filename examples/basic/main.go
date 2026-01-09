@@ -28,7 +28,7 @@ func main() {
 
 	// 解析单个域名
 	fmt.Println("=== 单域名解析 ===")
-	result, err := client.Resolve(ctx, "example.com", "1.2.3.4")
+	result, err := client.Resolve(ctx, "example.com", httpdns.WithClientIP("1.2.3.4"))
 	if err != nil {
 		log.Printf("Resolve failed: %v", err)
 	} else {
@@ -46,7 +46,7 @@ func main() {
 	// 批量解析域名
 	fmt.Println("=== 批量域名解析 ===")
 	domains := []string{"google.com", "github.com", "stackoverflow.com"}
-	results, err := client.ResolveBatch(ctx, domains, "1.2.3.4")
+	results, err := client.ResolveBatch(ctx, domains, httpdns.WithClientIP("1.2.3.4"))
 	if err != nil {
 		log.Printf("Batch resolve failed: %v", err)
 	} else {
@@ -67,7 +67,7 @@ func main() {
 	fmt.Println("=== 使用解析选项 ===")
 
 	// 仅解析 IPv4
-	result, err = client.Resolve(ctx, "example.com", "", httpdns.WithIPv4Only())
+	result, err = client.Resolve(ctx, "example.com", httpdns.WithIPv4Only())
 	if err != nil {
 		log.Printf("IPv4 only resolve failed: %v", err)
 	} else {
@@ -75,7 +75,7 @@ func main() {
 	}
 
 	// 仅解析 IPv6
-	result, err = client.Resolve(ctx, "example.com", "", httpdns.WithIPv6Only())
+	result, err = client.Resolve(ctx, "example.com", httpdns.WithIPv6Only())
 	if err != nil {
 		log.Printf("IPv6 only resolve failed: %v", err)
 	} else {

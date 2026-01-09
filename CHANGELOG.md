@@ -5,6 +5,28 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.0.1] - 2026-01-09
+
+### 新增
+- ✅ 支持内存缓存和持久化缓存
+- ✅ 支持过期缓存使用，降低解析延迟
+- ✅ ClientIP 参数可选化，使用 Option 模式
+
+### 优化
+- ✅ 批量解析结果顺序保持与输入一致
+
+### API 变更
+- **Breaking Change**: `Resolve()` 和 `ResolveBatch()` 方法签名变更
+  - 旧版本: `Resolve(ctx, domain, clientIP, opts...)`
+  - 新版本: `Resolve(ctx, domain, opts...)`
+  - 迁移方式: 使用 `WithClientIP(ip)` 选项传递客户端 IP
+
+### 配置选项
+- `EnableMemoryCache` - 启用内存缓存（默认 true）
+- `EnablePersistentCache` - 启用持久化缓存（默认 false）
+- `AllowExpiredCache` - 允许使用过期缓存（默认 false）
+- `CacheExpireThreshold` - 持久化缓存过期阈值（默认 0）
+
 ## [1.0.0] - 2025-12-29
 
 ### 新增

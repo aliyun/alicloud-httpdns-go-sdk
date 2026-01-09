@@ -8,12 +8,13 @@ import (
 
 // client 主客户端实现
 type client struct {
-	resolver *Resolver
-	config   *Config
-	stopCh   chan struct{}
-	wg       sync.WaitGroup
-	started  bool
-	mutex    sync.RWMutex
+	resolver     *Resolver
+	config       *Config
+	cacheManager *CacheManager
+	stopCh       chan struct{}
+	wg           sync.WaitGroup
+	started      bool
+	mutex        sync.RWMutex
 }
 
 // NewClient 创建新的HTTPDNS客户端
@@ -25,9 +26,20 @@ func NewClient(config *Config) (Client, error) {
 	resolver := NewResolver(config)
 
 	c := &client{
-		resolver: resolver,
-		config:   config,
-		stopCh:   make(chan struct{}),
+		resolver:     resolver,
+		config:       config,
+		cacheManager: resolver.cacheManager,
+		stopCh:       make(chan struct{}),
+	}
+
+	// 如果启用持久化缓存，尝试加载服务IP缓存
+	if config.EnablePersistentCache {
+		if ips, updatedAt, err := c.cacheManager.LoadServiceIPs(); err == nil && len(ips) > 0 {
+			if config.Logger != nil {
+				config.Logger.Printf("Loaded %d service IPs from cache (updated at %v)", len(ips), updatedAt)
+			}
+			resolver.httpClient.serviceIPManager.UpdateServiceIPs(ips)
+		}
 	}
 
 	// 启动定时更新服务IP的goroutine
@@ -67,6 +79,10 @@ func (c *client) periodicUpdateServiceIPs() {
 				if c.config.Logger != nil {
 					c.config.Logger.Printf("Failed to update service IPs: %v", err)
 				}
+			} else {
+				// 成功获取后保存到磁盘
+				ips := c.resolver.httpClient.serviceIPManager.GetServiceIPs()
+				c.cacheManager.SaveServiceIPsAsync(ips)
 			}
 			cancel()
 		case <-c.stopCh:
@@ -76,7 +92,7 @@ func (c *client) periodicUpdateServiceIPs() {
 }
 
 // Resolve 解析单个域名
-func (c *client) Resolve(ctx context.Context, domain string, clientIP string, opts ...ResolveOption) (*ResolveResult, error) {
+func (c *client) Resolve(ctx context.Context, domain string, opts ...ResolveOption) (*ResolveResult, error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -84,11 +100,11 @@ func (c *client) Resolve(ctx context.Context, domain string, clientIP string, op
 		return nil, NewHTTPDNSError("client_stopped", domain, ErrServiceUnavailable)
 	}
 
-	return c.resolver.ResolveSingle(ctx, domain, clientIP, opts...)
+	return c.resolver.ResolveSingle(ctx, domain, opts...)
 }
 
 // ResolveBatch 批量解析域名
-func (c *client) ResolveBatch(ctx context.Context, domains []string, clientIP string, opts ...ResolveOption) ([]*ResolveResult, error) {
+func (c *client) ResolveBatch(ctx context.Context, domains []string, opts ...ResolveOption) ([]*ResolveResult, error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -96,11 +112,11 @@ func (c *client) ResolveBatch(ctx context.Context, domains []string, clientIP st
 		return nil, NewHTTPDNSError("client_stopped", "", ErrServiceUnavailable)
 	}
 
-	return c.resolver.ResolveBatch(ctx, domains, clientIP, opts...)
+	return c.resolver.ResolveBatch(ctx, domains, opts...)
 }
 
 // ResolveAsync 异步解析域名
-func (c *client) ResolveAsync(ctx context.Context, domain string, clientIP string, callback func(*ResolveResult, error), opts ...ResolveOption) {
+func (c *client) ResolveAsync(ctx context.Context, domain string, callback func(*ResolveResult, error), opts ...ResolveOption) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -109,7 +125,7 @@ func (c *client) ResolveAsync(ctx context.Context, domain string, clientIP strin
 		return
 	}
 
-	c.resolver.ResolveAsync(ctx, domain, clientIP, callback, opts...)
+	c.resolver.ResolveAsync(ctx, domain, callback, opts...)
 }
 
 // Close 关闭客户端
@@ -159,7 +175,15 @@ func (c *client) UpdateServiceIPs(ctx context.Context) error {
 		return NewHTTPDNSError("client_stopped", "", ErrServiceUnavailable)
 	}
 
-	return c.resolver.httpClient.FetchServiceIPs(ctx)
+	if err := c.resolver.httpClient.FetchServiceIPs(ctx); err != nil {
+		return err
+	}
+
+	// 成功获取后保存到磁盘
+	ips := c.resolver.httpClient.serviceIPManager.GetServiceIPs()
+	c.cacheManager.SaveServiceIPsAsync(ips)
+
+	return nil
 }
 
 // GetServiceIPs 获取当前服务IP列表

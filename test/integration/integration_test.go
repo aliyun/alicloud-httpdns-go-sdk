@@ -29,7 +29,7 @@ func TestIntegration_EndToEnd(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("SingleResolve", func(t *testing.T) {
-		result, err := client.Resolve(ctx, "example.com", "1.2.3.4")
+		result, err := client.Resolve(ctx, "example.com", WithClientIP("1.2.3.4"))
 		if err != nil {
 			t.Errorf("Resolve failed: %v", err)
 			return
@@ -50,7 +50,7 @@ func TestIntegration_EndToEnd(t *testing.T) {
 
 	t.Run("BatchResolve", func(t *testing.T) {
 		domains := []string{"example.com", "google.com", "github.com"}
-		results, err := client.ResolveBatch(ctx, domains, "1.2.3.4")
+		results, err := client.ResolveBatch(ctx, domains, WithClientIP("1.2.3.4"))
 		if err != nil {
 			t.Errorf("ResolveBatch failed: %v", err)
 			return
@@ -72,11 +72,11 @@ func TestIntegration_EndToEnd(t *testing.T) {
 		var result *ResolveResult
 		var asyncErr error
 
-		client.ResolveAsync(ctx, "example.com", "1.2.3.4", func(r *ResolveResult, err error) {
+		client.ResolveAsync(ctx, "example.com", func(r *ResolveResult, err error) {
 			result = r
 			asyncErr = err
 			done <- true
-		})
+		}, WithClientIP("1.2.3.4"))
 
 		select {
 		case <-done:
@@ -129,9 +129,8 @@ func TestIntegration_Concurrency(t *testing.T) {
 
 			for j := 0; j < iterations; j++ {
 				domain := "example.com"
-				clientIP := "1.2.3.4"
 
-				_, err := client.Resolve(ctx, domain, clientIP)
+				_, err := client.Resolve(ctx, domain, WithClientIP("1.2.3.4"))
 				if err != nil {
 					errors <- err
 				}
@@ -180,7 +179,7 @@ func TestIntegration_FailoverAndRecovery(t *testing.T) {
 	ctx := context.Background()
 
 	// 尝试解析，由于没有可用的服务IP，应该返回错误
-	_, err = client.Resolve(ctx, "localhost", "127.0.0.1")
+	_, err = client.Resolve(ctx, "localhost", WithClientIP("127.0.0.1"))
 	if err == nil {
 		t.Error("Expected error with unreachable bootstrap IPs, but got none")
 		return
@@ -226,7 +225,7 @@ func TestIntegration_NetworkConditions(t *testing.T) {
 			ctx := context.Background()
 			start := time.Now()
 
-			result, err := client.Resolve(ctx, "example.com", "1.2.3.4")
+			result, err := client.Resolve(ctx, "example.com", WithClientIP("1.2.3.4"))
 			duration := time.Since(start)
 
 			if err != nil {
@@ -272,7 +271,7 @@ func TestIntegration_LongRunning(t *testing.T) {
 	for {
 		select {
 		case <-ticker.C:
-			_, err := client.Resolve(ctx, "example.com", "1.2.3.4")
+			_, err := client.Resolve(ctx, "example.com", WithClientIP("1.2.3.4"))
 			if err != nil {
 				t.Logf("Long running resolve error: %v", err)
 			}

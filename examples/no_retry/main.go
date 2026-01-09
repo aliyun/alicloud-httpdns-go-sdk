@@ -46,7 +46,7 @@ func main() {
 
 	for _, domain := range resolvableDomains {
 		start := time.Now()
-		result, err := client.Resolve(ctx, domain, "")
+		result, err := client.Resolve(ctx, domain)
 		duration := time.Since(start)
 
 		if err != nil {
@@ -62,7 +62,7 @@ func main() {
 
 	for _, domain := range unresolvableDomains {
 		start := time.Now()
-		result, err := client.Resolve(ctx, domain, "")
+		result, err := client.Resolve(ctx, domain)
 		duration := time.Since(start)
 
 		if err != nil {
@@ -105,7 +105,7 @@ func main() {
 
 	// 测试一个域名看重试行为
 	start := time.Now()
-	result, err := customClient.Resolve(ctx, "www.aliyun.com", "")
+	result, err := customClient.Resolve(ctx, "www.aliyun.com")
 	duration := time.Since(start)
 
 	if err != nil {

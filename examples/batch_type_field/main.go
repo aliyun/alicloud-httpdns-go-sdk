@@ -36,7 +36,7 @@ func main() {
 	ctx := context.Background()
 
 	fmt.Printf("正在批量解析域名: %v\n", domains)
-	results, err := client.ResolveBatch(ctx, domains, "")
+	results, err := client.ResolveBatch(ctx, domains)
 	if err != nil {
 		log.Fatalf("批量解析失败: %v", err)
 	}

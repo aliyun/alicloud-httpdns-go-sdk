@@ -74,7 +74,7 @@ func TestResolver_ResolveSingle(t *testing.T) {
 	resolver := NewResolver(config)
 
 	ctx := context.Background()
-	result, err := resolver.ResolveSingle(ctx, "example.com", "1.2.3.4")
+	result, err := resolver.ResolveSingle(ctx, "example.com", WithClientIP("1.2.3.4"))
 
 	if err != nil {
 		t.Errorf("ResolveSingle() error = %v", err)
@@ -143,7 +143,7 @@ func TestResolver_ResolveSingle_WithOptions(t *testing.T) {
 	resolver := NewResolver(config)
 
 	ctx := context.Background()
-	result, err := resolver.ResolveSingle(ctx, "example.com", "", WithIPv4Only())
+	result, err := resolver.ResolveSingle(ctx, "example.com", WithIPv4Only())
 
 	if err != nil {
 		t.Errorf("ResolveSingle() error = %v", err)
@@ -197,7 +197,7 @@ func TestResolver_ResolveBatch(t *testing.T) {
 
 	ctx := context.Background()
 	domains := []string{"example.com", "test.com"}
-	results, err := resolver.ResolveBatch(ctx, domains, "1.2.3.4")
+	results, err := resolver.ResolveBatch(ctx, domains, WithClientIP("1.2.3.4"))
 
 	if err != nil {
 		t.Errorf("ResolveBatch() error = %v", err)
@@ -232,7 +232,7 @@ func TestResolver_ResolveBatch_EmptyDomains(t *testing.T) {
 	resolver := NewResolver(config)
 
 	ctx := context.Background()
-	_, err := resolver.ResolveBatch(ctx, []string{}, "")
+	_, err := resolver.ResolveBatch(ctx, []string{})
 
 	if err == nil {
 		t.Error("ResolveBatch() should return error for empty domains")
@@ -262,7 +262,7 @@ func TestResolver_ResolveBatch_TooManyDomains(t *testing.T) {
 		"domain6.com", // 第6个域名，应该触发错误
 	}
 
-	_, err := resolver.ResolveBatch(ctx, domains, "")
+	_, err := resolver.ResolveBatch(ctx, domains)
 
 	if err == nil {
 		t.Error("ResolveBatch() should return error for too many domains")
@@ -329,7 +329,7 @@ func TestResolver_ResolveBatch_ExactlyFiveDomains(t *testing.T) {
 		"domain5.com",
 	}
 
-	results, err := resolver.ResolveBatch(ctx, domains, "1.2.3.4")
+	results, err := resolver.ResolveBatch(ctx, domains, WithClientIP("1.2.3.4"))
 
 	if err != nil {
 		t.Errorf("ResolveBatch() should not return error for exactly 5 domains, got: %v", err)
@@ -375,7 +375,7 @@ func TestResolver_ResolveAsync(t *testing.T) {
 	resultChan := make(chan *ResolveResult, 1)
 	errorChan := make(chan error, 1)
 
-	resolver.ResolveAsync(ctx, "example.com", "", func(result *ResolveResult, err error) {
+	resolver.ResolveAsync(ctx, "example.com", func(result *ResolveResult, err error) {
 		if err != nil {
 			errorChan <- err
 		} else {

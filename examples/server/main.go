@@ -76,7 +76,11 @@ func (s *DNSServer) handleResolve(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// 解析域名
-	result, err := s.client.Resolve(ctx, domain, clientIP)
+	opts := []httpdns.ResolveOption{}
+	if clientIP != "" {
+		opts = append(opts, httpdns.WithClientIP(clientIP))
+	}
+	result, err := s.client.Resolve(ctx, domain, opts...)
 
 	response := DNSResponse{
 		Domain:    domain,
@@ -143,7 +147,11 @@ func (s *DNSServer) handleBatchResolve(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	// 批量解析
-	results, err := s.client.ResolveBatch(ctx, request.Domains, clientIP)
+	opts := []httpdns.ResolveOption{}
+	if clientIP != "" {
+		opts = append(opts, httpdns.WithClientIP(clientIP))
+	}
+	results, err := s.client.ResolveBatch(ctx, request.Domains, opts...)
 
 	var responses []DNSResponse
 

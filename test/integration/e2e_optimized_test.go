@@ -41,7 +41,7 @@ func TestE2E_OptimizedRealService(t *testing.T) {
 
 		for _, domain := range configuredDomains {
 			t.Run(domain, func(t *testing.T) {
-				result, err := client.Resolve(ctx, domain, "")
+				result, err := client.Resolve(ctx, domain)
 				if err != nil {
 					t.Errorf("Failed to resolve configured domain %s: %v", domain, err)
 					return
@@ -70,7 +70,7 @@ func TestE2E_OptimizedRealService(t *testing.T) {
 
 		for _, domain := range unconfiguredDomains {
 			t.Run(domain, func(t *testing.T) {
-				result, err := client.Resolve(ctx, domain, "")
+				result, err := client.Resolve(ctx, domain)
 
 				if err != nil {
 					t.Logf("✅ Domain %s failed to resolve as expected: %v", domain, err)
@@ -95,7 +95,7 @@ func TestE2E_OptimizedRealService(t *testing.T) {
 			"www.alibaba.com", // 应该成功
 		}
 
-		results, err := client.ResolveBatch(ctx, domains, "")
+		results, err := client.ResolveBatch(ctx, domains)
 		if err != nil {
 			t.Logf("Batch resolve failed: %v", err)
 			return
@@ -128,7 +128,7 @@ func TestE2E_OptimizedRealService(t *testing.T) {
 		for i := 0; i < concurrency; i++ {
 			go func(workerID int) {
 				for j := 0; j < requestsPerWorker; j++ {
-					_, err := client.Resolve(ctx, domain, "")
+					_, err := client.Resolve(ctx, domain)
 					results <- err
 
 					// 添加延迟避免频率限制
@@ -162,8 +162,8 @@ func TestE2E_OptimizedRealService(t *testing.T) {
 		client.ResetMetrics()
 
 		// 执行几个解析操作
-		client.Resolve(ctx, "www.aliyun.com", "")
-		client.Resolve(ctx, "www.alibaba.com", "")
+		client.Resolve(ctx, "www.aliyun.com")
+		client.Resolve(ctx, "www.alibaba.com")
 
 		stats := client.GetMetrics()
 		t.Logf("Metrics: Total=%d, Success=%d, Failed=%d, SuccessRate=%.1f%%, AvgLatency=%v",

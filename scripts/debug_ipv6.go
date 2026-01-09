@@ -56,7 +56,7 @@ func main() {
 	defer client.Close()
 
 	ctx := context.Background()
-	results, err := client.ResolveBatch(ctx, []string{"test.com"}, "")
+	results, err := client.ResolveBatch(ctx, []string{"test.com"})
 	if err != nil {
 		fmt.Printf("❌ 批量解析失败: %v\n", err)
 		return
